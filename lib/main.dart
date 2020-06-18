@@ -1,4 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map/plugin_api.dart';
+import 'package:latlong/latlong.dart';
 
 void main() => runApp(MyApp());
 
@@ -25,13 +29,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
+  List<Marker> _markers = [];
 
   @override
   Widget build(BuildContext context) {
@@ -39,13 +37,25 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: Center(
-        child: Text('dupa12'),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
+      body: FlutterMap(
+        options: MapOptions(
+            center: LatLng(41.904088, 12.453005),
+            zoom: 13.0,
+            onTap: (latLng) {
+              print('Marker on $latLng');
+              _markers = [
+                Marker(point: latLng, builder: (ctx) => Icon(Icons.home))
+              ];
+              setState(() {});
+            }),
+        layers: [
+          TileLayerOptions(
+              urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+              subdomains: ['a', 'b', 'c']),
+          MarkerLayerOptions(
+            markers: _markers,
+          ),
+        ],
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
