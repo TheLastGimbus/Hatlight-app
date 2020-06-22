@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter_ble_lib/flutter_ble_lib.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:hatlight/pages/home_page/connect_dialog.dart';
 import 'package:hatlight/providers/bt_provider.dart';
+import 'package:latlong/latlong.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
@@ -13,7 +14,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<ScanResult> results = [];
   int _picked = 0;
 
   void _permission() async {
@@ -29,20 +29,32 @@ class _HomePageState extends State<HomePage> {
     _permission();
   }
 
-  Widget devicesList(BuildContext context, List<ScanResult> devices) {
+  Widget hatStatusBar() {
     var bt = Provider.of<BTProvider>(context);
-    return Flexible(
-      child: ListView.builder(
-        itemCount: devices.length,
-        itemBuilder: (context, x) => ListTile(
-          title: Text(devices[x].advertisementData.localName),
-          subtitle: Text(devices[x].peripheral.identifier),
-          onTap: () async {
-            await bt.stopScan();
-            await bt.connectToPeripheral(devices[x].peripheral);
-          },
-        ),
-      ),
+    return FutureBuilder(
+      future: bt.isConnected(),
+      initialData: false,
+      builder: (ctx, AsyncSnapshot<bool> snapshot) {
+        bool con() => (snapshot.hasData && snapshot.data);
+        var m = 'Hat status: ' +
+            (snapshot.hasData
+                ? snapshot.data ? 'connected' : 'not connected!'
+                : 'checking...');
+        return ListTile(
+          title: Text(m),
+          subtitle: con() ? null : Text('Tap to connect'),
+          onTap: con()
+              ? null
+              : () => showDialog(
+                    context: context,
+                    builder: (context) =>
+                        ChangeNotifierProvider<BTProvider>.value(
+                      value: bt,
+                      child: ConnectDialog(),
+                    ),
+                  ),
+        );
+      },
     );
   }
 
@@ -54,25 +66,22 @@ class _HomePageState extends State<HomePage> {
         title: Text("Home page"),
       ),
       body: Container(
-        padding: EdgeInsets.all(25),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
-            RaisedButton(
-              child: Text('Scan'),
-              onPressed: () {
-                bt.scanForDevices().listen((event) {
-                  for (var res in results) {
-                    if (res.peripheral.identifier ==
-                        event.peripheral.identifier) {
-                      return;
-                    }
-                  }
-                  results.add(event);
-                  setState(() {});
-                });
-              },
+            // TODO: Update bar on connection change
+            hatStatusBar(),
+            Flexible(
+              child: FlutterMap(
+                options: MapOptions(center: LatLng(41.904088, 12.453005)),
+                layers: [
+                  TileLayerOptions(
+                      urlTemplate:
+                      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      subdomains: ['a', 'b', 'c']),
+                ],
+              ),
             ),
-            devicesList(context, results),
           ],
         ),
       ),
