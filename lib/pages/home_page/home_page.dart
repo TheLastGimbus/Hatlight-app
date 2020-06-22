@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong/latlong.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter_ble_lib/flutter_ble_lib.dart';
+import 'package:hatlight/providers/bt_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key key}) : super(key: key);
@@ -10,34 +13,72 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<Marker> _markers = [];
+  List<ScanResult> results = [];
+  int _picked = 0;
+
+  void _permission() async {
+    var status = await Permission.locationAlways.status;
+    if (!status.isGranted) {
+      Permission.locationAlways.request();
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _permission();
+  }
+
+  Widget devicesList(BuildContext context, List<ScanResult> devices) {
+    var bt = Provider.of<BTProvider>(context);
+    return Flexible(
+      child: ListView.builder(
+        itemCount: devices.length,
+        itemBuilder: (context, x) => ListTile(
+          title: Text(devices[x].advertisementData.localName),
+          subtitle: Text(devices[x].peripheral.identifier),
+          onTap: () async {
+            await bt.stopScan();
+            await bt.connectToPeripheral(devices[x].peripheral);
+          },
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    var bt = Provider.of<BTProvider>(context);
     return Scaffold(
       appBar: AppBar(
         title: Text("Home page"),
       ),
-      body: FlutterMap(
-        options: MapOptions(
-            center: LatLng(41.904088, 12.453005),
-            zoom: 13.0,
-            onTap: (latLng) {
-              print('Marker on $latLng');
-              _markers = [
-                Marker(point: latLng, builder: (ctx) => Icon(Icons.home))
-              ];
-              setState(() {});
-            }),
-        layers: [
-          TileLayerOptions(
-              urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-              subdomains: ['a', 'b', 'c']),
-          MarkerLayerOptions(
-            markers: _markers,
-          ),
-        ],
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      body: Container(
+        padding: EdgeInsets.all(25),
+        child: Column(
+          children: <Widget>[
+            RaisedButton(
+              child: Text('Scan'),
+              onPressed: () {
+                bt.scanForDevices().listen((event) {
+                  for (var res in results) {
+                    if (res.peripheral.identifier ==
+                        event.peripheral.identifier) {
+                      return;
+                    }
+                  }
+                  results.add(event);
+                  setState(() {});
+                });
+              },
+            ),
+            devicesList(context, results),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {},
+      ),
     );
   }
 }
