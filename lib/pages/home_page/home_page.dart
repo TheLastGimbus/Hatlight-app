@@ -31,6 +31,17 @@ class _HomePageState extends State<HomePage> {
 
   Widget hatStatusBar() {
     var bt = Provider.of<BTProvider>(context);
+
+    connectDialog() {
+      showDialog(
+        context: context,
+        builder: (context) => ChangeNotifierProvider<BTProvider>.value(
+          value: bt,
+          child: ConnectDialog(),
+        ),
+      ).then((value) => setState(() {}));
+    }
+
     return FutureBuilder(
       future: bt.isConnected(),
       initialData: false,
@@ -48,14 +59,13 @@ class _HomePageState extends State<HomePage> {
           subtitle: con() ? null : Text('Tap to connect'),
           onTap: con()
               ? null
-              : () => showDialog(
-                    context: context,
-                    builder: (context) =>
-                        ChangeNotifierProvider<BTProvider>.value(
-                      value: bt,
-                      child: ConnectDialog(),
-                    ),
-                  ).then((value) => setState(() {})),
+              : () async {
+            if (await bt.connectToSaved()) {
+              setState(() {});
+              return;
+            }
+            connectDialog();
+          },
         );
       },
     );

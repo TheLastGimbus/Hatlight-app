@@ -47,9 +47,9 @@ class BTProvider with ChangeNotifier {
     if (id == null || id.isEmpty) return null;
     var known = await _manager.knownPeripherals([id]);
     if (known.length > 0)
-      return null;
-    else
       return known[0];
+    else
+      return null;
   }
 
   Future<bool> connectToSaved() async {
