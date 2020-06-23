@@ -36,6 +36,9 @@ class _HomePageState extends State<HomePage> {
       initialData: false,
       builder: (ctx, AsyncSnapshot<bool> snapshot) {
         bool con() => (snapshot.hasData && snapshot.data);
+        // TODO: This still sucks if hat disconnects by itself
+        // But this is stuff that I will fix when i will do a complete rewrite
+        // when I learn more how this stuff works
         var m = 'Hat status: ' +
             (snapshot.hasData
                 ? snapshot.data ? 'connected' : 'not connected!'
@@ -52,7 +55,7 @@ class _HomePageState extends State<HomePage> {
                       value: bt,
                       child: ConnectDialog(),
                     ),
-                  ),
+                  ).then((value) => setState(() {})),
         );
       },
     );
@@ -69,7 +72,6 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
-            // TODO: Update bar on connection change
             hatStatusBar(),
             Flexible(
               child: FlutterMap(
@@ -78,7 +80,8 @@ class _HomePageState extends State<HomePage> {
                   TileLayerOptions(
                       urlTemplate:
                       "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                      subdomains: ['a', 'b', 'c']),
+                    subdomains: ['a', 'b', 'c'],
+                  ),
                 ],
               ),
             ),
