@@ -32,6 +32,7 @@ dependencies:
   # Plugins:
   permission_handler: ^5.0.1
   flutter_ble_lib: ^2.2.5
+  location: ^3.0.2
 
 
 dev_dependencies:
