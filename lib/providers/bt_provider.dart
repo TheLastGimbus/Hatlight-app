@@ -59,6 +59,8 @@ class BTProvider with ChangeNotifier {
 
   Future<bool> isConnected() => _per?.isConnected() ?? Future.value(false);
 
+  Future<void> sendVal(int val) {}
+
   @override
   void dispose() {
     _manager.destroyClient();

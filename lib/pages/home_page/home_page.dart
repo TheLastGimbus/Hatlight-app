@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:foreground_service/foreground_service.dart';
+import 'package:hatlight/foreground_service_utils.dart';
 import 'package:hatlight/pages/home_page/connect_dialog.dart';
 import 'package:hatlight/providers/bt_provider.dart';
 import 'package:latlong/latlong.dart';
@@ -119,13 +119,22 @@ class _HomePageState extends State<HomePage> {
                     Container(
                       alignment: Alignment.bottomCenter,
                       padding: EdgeInsets.all(20),
-                      child: RaisedButton(
-                        child: Text('go'),
-                        onPressed: () {
-                          ForegroundService.notification.setTitle('Dupa');
-
-                          ForegroundService.startForegroundService();
-                        },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          RaisedButton(
+                            child: Text('go'),
+                            onPressed: () {
+                              startService();
+                            },
+                          ),
+                          RaisedButton(
+                            child: Text('set'),
+                            onPressed: () {
+                              bt.sendVal(5);
+                            },
+                          ),
+                        ],
                       ),
                     )
                 ],
