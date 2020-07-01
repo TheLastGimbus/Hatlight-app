@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:foreground_service/foreground_service.dart';
 import 'package:hatlight/foreground_service_utils.dart';
 import 'package:hatlight/pages/home_page/connect_dialog.dart';
 import 'package:hatlight/providers/bt_provider.dart';
@@ -124,14 +125,33 @@ class _HomePageState extends State<HomePage> {
                         children: <Widget>[
                           RaisedButton(
                             child: Text('go'),
-                            onPressed: () {
-                              startService();
+                            onPressed: () async {
+                              await ForegroundService.setServiceFunctionAsync(
+                                  false);
+                              await ForegroundService.startForegroundService(
+                                  serviceFunction);
+                              await ForegroundService.setupIsolateCommunication(
+                                  (message) => print(message));
                             },
                           ),
                           RaisedButton(
                             child: Text('set'),
-                            onPressed: () {
-                              bt.sendVal(5);
+                            onPressed: () async {
+                              if (!await ForegroundService
+                                  .isBackgroundIsolateSetupComplete() ||
+                                  !ForegroundService
+                                      .isIsolateCommunicationSetup) {
+                                print('stuff is not set up!!');
+                              } else {
+                                ForegroundService.sendToPort(
+                                    {'method': 'connectTo', 'args': {}});
+                              }
+                            },
+                          ),
+                          RaisedButton(
+                            child: Text('stop'),
+                            onPressed: () async {
+                              await ForegroundService.stopForegroundService();
                             },
                           ),
                         ],
