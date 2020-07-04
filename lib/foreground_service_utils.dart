@@ -1,4 +1,42 @@
+import 'dart:isolate';
+
+import 'package:flutter_ble_lib/flutter_ble_lib.dart';
 import 'package:foreground_service/foreground_service.dart';
+
+/// This class is only to use inside serviceFunction!!!
+/// Don't use it anywhere else!
+/// It basically manages everything because foreground_service plugin is
+/// implemented very poorly :/
+class _ForegroundServiceHandler {
+  final Future<void> Function(Map message) sendMessage;
+  final _bleManager = BleManager();
+
+  _ForegroundServiceHandler(this.sendMessage) {
+    var n = ForegroundService.notification;
+    n.setTitle('Waiting to connect to hat...');
+  }
+
+  final bleManager = BleManager();
+
+  void _handleMessage(Map message) {
+    switch (message['method']) {
+      case 'connectTo':
+        print('Connecting to...');
+        print('TODO'); // TODO
+        break;
+      case 'scanDevices':
+        print('Scanning devices...');
+        print('TODO'); // TODO
+        break;
+    }
+  }
+
+  void receiveMessage(dynamic message) {
+    print('New message received in service: $message');
+    assert(message is Map);
+    _handleMessage(message);
+  }
+}
 
 /// Okay, so this is how bt communication will work
 /// All connection stuff must be done and managed from foreground service
@@ -8,22 +46,13 @@ import 'package:foreground_service/foreground_service.dart';
 /// Let's see how this will go...
 void serviceFunction() async {
   print('Foreground service start');
-  void _handleMessage(dynamic message) {
-    print('New message received in service: $message');
-    assert(message is Map);
-    switch (message['method']) {
-      case 'connectTo':
-        print('Connecting to...');
-        break;
-    }
-  }
+  final handler = _ForegroundServiceHandler(
+      (message) => ForegroundService.sendToPort(message));
 
-  await ForegroundService.setupIsolateCommunication(_handleMessage);
+  await ForegroundService.setupIsolateCommunication(
+      (message) => handler.receiveMessage(message));
 
-  var n = ForegroundService.notification;
-  n.setTitle('Waiting to connect to hat...');
   await Future.delayed(Duration(seconds: 30));
-  ForegroundService.stopForegroundService();
-
-  while (true);
+  await ForegroundService.stopForegroundService();
+  Isolate.current.kill(priority: Isolate.immediate);
 }

@@ -128,6 +128,8 @@ class _HomePageState extends State<HomePage> {
                             onPressed: () async {
                               await ForegroundService.setServiceFunctionAsync(
                                   false);
+                              await ForegroundService.setServiceIntervalSeconds(
+                                  999999999999999999);
                               await ForegroundService.startForegroundService(
                                   serviceFunction);
                               await ForegroundService.setupIsolateCommunication(
