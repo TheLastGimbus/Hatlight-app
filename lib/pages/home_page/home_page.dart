@@ -141,6 +141,13 @@ class _HomePageState extends State<HomePage> {
                             child: Text('go'),
                             onPressed: () async {
                               // TODO: Send info where to go
+                              ForegroundService.sendToPort({
+                                'method': 'navigateToLatLngCompass',
+                                'args': {
+                                  'lat': markers[0].point.latitude,
+                                  'lng': markers[0].point.longitude
+                                }
+                              });
                             },
                           ),
                           RaisedButton(

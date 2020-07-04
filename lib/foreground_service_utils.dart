@@ -1,5 +1,6 @@
 import 'package:flutter_ble_lib/flutter_ble_lib.dart';
 import 'package:foreground_service/foreground_service.dart';
+import 'package:latlong/latlong.dart';
 
 /// This class is only to use inside serviceFunction!!!
 /// Don't use it anywhere else!
@@ -23,6 +24,11 @@ class _ForegroundServiceHandler {
       case 'connectToHatAuto':
         print('Connecting to hat ...');
         print('TODO'); // TODO
+        break;
+      case 'navigateToLatLngCompass':
+        var destination =
+            LatLng(message['args']['lat'], message['args']['lng']);
+        print('Navigating to: $destination');
         break;
       case 'scanDevices':
         print('Scanning devices...');
@@ -56,6 +62,6 @@ void serviceFunction() async {
   await ForegroundService.setupIsolateCommunication(
       (message) => handler.receiveMessage(message));
 
-  await Future.delayed(Duration(seconds: 60));
+  await Future.delayed(Duration(minutes: 3));
   await ForegroundService.stopForegroundService();
 }
