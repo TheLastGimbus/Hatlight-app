@@ -126,14 +126,20 @@ class _HomePageState extends State<HomePage> {
                           RaisedButton(
                             child: Text('go'),
                             onPressed: () async {
+                              await ForegroundService.setServiceIntervalSeconds(
+                                  1);
+
                               await ForegroundService.setServiceFunctionAsync(
                                   false);
-                              await ForegroundService.setServiceIntervalSeconds(
-                                  999999999999999999);
                               await ForegroundService.startForegroundService(
                                   serviceFunction);
+                              while (!await ForegroundService
+                                  .isBackgroundIsolateSetupComplete()) {
+                                print('isolate not done yet');
+                                await Future.delayed(Duration(milliseconds: 1));
+                              }
                               await ForegroundService.setupIsolateCommunication(
-                                  (message) => print(message));
+                                      (message) => print(message));
                             },
                           ),
                           RaisedButton(
@@ -152,8 +158,9 @@ class _HomePageState extends State<HomePage> {
                           ),
                           RaisedButton(
                             child: Text('stop'),
-                            onPressed: () async {
-                              await ForegroundService.stopForegroundService();
+                            onPressed: () {
+                              ForegroundService.sendToPort(
+                                  {'method': 'stopService', 'args': {}});
                             },
                           ),
                         ],

@@ -1,5 +1,3 @@
-import 'dart:isolate';
-
 import 'package:flutter_ble_lib/flutter_ble_lib.dart';
 import 'package:foreground_service/foreground_service.dart';
 
@@ -17,10 +15,13 @@ class _ForegroundServiceHandler {
 
   final bleManager = BleManager();
 
-  void _handleMessage(Map message) {
+  void handleMessage(Map message) {
     switch (message['method']) {
-      case 'connectTo':
-        print('Connecting to...');
+      case 'stopService':
+        stop();
+        break;
+      case 'connectToHatAuto':
+        print('Connecting to hat ...');
         print('TODO'); // TODO
         break;
       case 'scanDevices':
@@ -33,7 +34,11 @@ class _ForegroundServiceHandler {
   void receiveMessage(dynamic message) {
     print('New message received in service: $message');
     assert(message is Map);
-    _handleMessage(message);
+    handleMessage(message);
+  }
+
+  void stop() async {
+    await ForegroundService.stopForegroundService();
   }
 }
 
@@ -51,7 +56,6 @@ void serviceFunction() async {
   await ForegroundService.setupIsolateCommunication(
       (message) => handler.receiveMessage(message));
 
-  await Future.delayed(Duration(seconds: 30));
+  await Future.delayed(Duration(seconds: 60));
   await ForegroundService.stopForegroundService();
-  Isolate.current.kill(priority: Isolate.immediate);
 }
