@@ -9,7 +9,6 @@ import 'package:foreground_service/foreground_service.dart';
 /// implemented very poorly :/
 class _ForegroundServiceHandler {
   final Future<void> Function(Map message) sendMessage;
-  final _bleManager = BleManager();
 
   _ForegroundServiceHandler(this.sendMessage) {
     var n = ForegroundService.notification;
