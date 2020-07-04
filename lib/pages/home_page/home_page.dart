@@ -29,10 +29,24 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _initService() async {
+    await ForegroundService.setServiceIntervalSeconds(1);
+
+    await ForegroundService.setServiceFunctionAsync(false);
+    await ForegroundService.startForegroundService(serviceFunction);
+    while (!await ForegroundService.isBackgroundIsolateSetupComplete()) {
+      print('isolate not done yet');
+      await Future.delayed(Duration(milliseconds: 1));
+    }
+    await ForegroundService.setupIsolateCommunication(
+        (message) => print(message));
+  }
+
   @override
   void initState() {
     super.initState();
     _permission();
+    _initService();
   }
 
   Widget hatStatusBar() {
@@ -126,20 +140,7 @@ class _HomePageState extends State<HomePage> {
                           RaisedButton(
                             child: Text('go'),
                             onPressed: () async {
-                              await ForegroundService.setServiceIntervalSeconds(
-                                  1);
-
-                              await ForegroundService.setServiceFunctionAsync(
-                                  false);
-                              await ForegroundService.startForegroundService(
-                                  serviceFunction);
-                              while (!await ForegroundService
-                                  .isBackgroundIsolateSetupComplete()) {
-                                print('isolate not done yet');
-                                await Future.delayed(Duration(milliseconds: 1));
-                              }
-                              await ForegroundService.setupIsolateCommunication(
-                                      (message) => print(message));
+                              // TODO: Send info where to go
                             },
                           ),
                           RaisedButton(
