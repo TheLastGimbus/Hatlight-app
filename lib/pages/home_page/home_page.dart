@@ -2,12 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:foreground_service/foreground_service.dart';
 import 'package:hatlight/foreground_service_utils.dart';
-import 'package:hatlight/pages/home_page/connect_dialog.dart';
-import 'package:hatlight/providers/bt_provider.dart';
 import 'package:latlong/latlong.dart';
 import 'package:location/location.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key key}) : super(key: key);
@@ -36,7 +33,7 @@ class _HomePageState extends State<HomePage> {
     await ForegroundService.startForegroundService(serviceFunction);
     while (!await ForegroundService.isBackgroundIsolateSetupComplete()) {
       print('isolate not done yet');
-      await Future.delayed(Duration(milliseconds: 1));
+      await Future.delayed(Duration(milliseconds: 10));
     }
     await ForegroundService.setupIsolateCommunication(
         (message) => print(message));
@@ -94,6 +91,10 @@ class _HomePageState extends State<HomePage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
                           RaisedButton(
+                            child: Text('init'),
+                            onPressed: () => _initService(),
+                          ),
+                          RaisedButton(
                             child: Text('go'),
                             onPressed: () async {
                               // TODO: Send info where to go
@@ -125,6 +126,9 @@ class _HomePageState extends State<HomePage> {
                             onPressed: () {
                               ForegroundService.sendToPort(
                                   {'method': 'stopService', 'args': {}});
+                            },
+                            onLongPress: () {
+                              ForegroundService.stopForegroundService();
                             },
                           ),
                         ],
