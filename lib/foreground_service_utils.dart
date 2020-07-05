@@ -15,8 +15,7 @@ class _ForegroundServiceHandler {
 
   _ForegroundServiceHandler({this.sendMessage, this.onStop}) {
     n.setTitle('Waiting to connect to hat...');
-//    connectToHatAuto()
-//        .then((value) => n.setTitle(value ? 'Connected' : 'Not connected!'));
+    bleManager.createClient();
   }
 
   final bleManager = BleManager();
@@ -28,7 +27,9 @@ class _ForegroundServiceHandler {
         break;
       case 'connectToHatAuto':
         print('Connecting to hat ...');
-        connectToHatAuto();
+        n.setTitle('Connecting...');
+        connectToHatAuto().then(
+            (value) => n.setTitle(value ? 'Connected' : 'Not connected!'));
         break;
       case 'navigateToLatLngCompass':
         var destination =
@@ -49,17 +50,31 @@ class _ForegroundServiceHandler {
   }
 
   Future<bool> connectToHatAuto() async {
-    n.setTitle('Connecting...');
     Peripheral per;
-    bleManager.startPeripheralScan(uuids: [SERVICE_UUID]).listen((event) {
+    bleManager.startPeripheralScan(
+        scanMode: ScanMode.balanced, uuids: [SERVICE_UUID]).listen((event) {
+      print('New per found');
+      print(event.advertisementData.localName);
       per = event.peripheral;
     });
-    while (per == null);
-    await per.connect();
-    return per.isConnected();
+    // Can't receive new devices when blocked with "await" :/
+//    var start = DateTime.now();
+//    await Future.doWhile(() =>
+//    (per == null &&
+//        DateTime.now().isBefore(start.add(Duration(seconds: 30)))));
+//    if (per == null) {
+//      print('Not found!');
+//      bleManager.stopPeripheralScan();
+//      return false;
+//    } else {
+//      print('Connecting to it...');
+//      await per.connect();
+//      return per.isConnected();
+//    }
   }
 
   void stop() async {
+    await bleManager.destroyClient();
     await ForegroundService.stopForegroundService();
     onStop();
   }

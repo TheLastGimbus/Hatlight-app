@@ -108,7 +108,7 @@ class _HomePageState extends State<HomePage> {
                             },
                           ),
                           RaisedButton(
-                            child: Text('set'),
+                            child: Text('connect'),
                             onPressed: () async {
                               if (!await ForegroundService
                                   .isBackgroundIsolateSetupComplete() ||
@@ -117,7 +117,7 @@ class _HomePageState extends State<HomePage> {
                                 print('stuff is not set up!!');
                               } else {
                                 ForegroundService.sendToPort(
-                                    {'method': 'connectTo', 'args': {}});
+                                    {'method': 'connectToHatAuto', 'args': {}});
                               }
                             },
                           ),
