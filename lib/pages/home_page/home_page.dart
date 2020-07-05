@@ -49,51 +49,8 @@ class _HomePageState extends State<HomePage> {
     _initService();
   }
 
-  Widget hatStatusBar() {
-    var bt = Provider.of<BTProvider>(context);
-
-    connectDialog() {
-      showDialog(
-        context: context,
-        builder: (context) => ChangeNotifierProvider<BTProvider>.value(
-          value: bt,
-          child: ConnectDialog(),
-        ),
-      ).then((value) => setState(() {}));
-    }
-
-    return FutureBuilder(
-      future: bt.isConnected(),
-      initialData: false,
-      builder: (ctx, AsyncSnapshot<bool> snapshot) {
-        bool con() => (snapshot.hasData && snapshot.data);
-        // TODO: This still sucks if hat disconnects by itself
-        // But this is stuff that I will fix when i will do a complete rewrite
-        // when I learn more how this stuff works
-        var m = 'Hat status: ' +
-            (snapshot.hasData
-                ? snapshot.data ? 'connected' : 'not connected!'
-                : 'checking...');
-        return ListTile(
-          title: Text(m),
-          subtitle: con() ? null : Text('Tap to connect'),
-          onTap: con()
-              ? null
-              : () async {
-            if (await bt.connectToSaved()) {
-              setState(() {});
-              return;
-            }
-            connectDialog();
-          },
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    var bt = Provider.of<BTProvider>(context);
     return Scaffold(
       appBar: AppBar(
         title: Text("Home page"),
@@ -102,7 +59,6 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
-            hatStatusBar(),
             Flexible(
               child: Stack(
                 children: <Widget>[

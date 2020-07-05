@@ -21,10 +21,7 @@ class MyApp extends StatelessWidget {
       themeMode: ThemeMode.dark,
       // I need to replace it with something that will work in
       // foreground service
-      home: MultiProvider(
-        providers: [ChangeNotifierProvider(create: (_) => BTProvider())],
-        child: HomePage(),
-      ),
+      home: HomePage(),
     );
   }
 }
