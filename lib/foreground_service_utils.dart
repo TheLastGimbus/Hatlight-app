@@ -77,7 +77,6 @@ class _ForegroundServiceHandler {
   }
 
   void stop() async {
-    await per?.discoverAllServicesAndCharacteristics();
     await per?.disconnectOrCancelConnection();
     per = null;
     await bleManager.destroyClient();

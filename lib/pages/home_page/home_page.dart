@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:foreground_service/foreground_service.dart';
-import 'package:hatlight/foreground_service_utils.dart';
+import 'package:hatlight/providers/bt_provider.dart';
 import 'package:latlong/latlong.dart';
 import 'package:location/location.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key key}) : super(key: key);
@@ -26,28 +27,15 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _initService() async {
-    await ForegroundService.setServiceIntervalSeconds(1);
-
-    await ForegroundService.setServiceFunctionAsync(false);
-    await ForegroundService.startForegroundService(serviceFunction);
-    while (!await ForegroundService.isBackgroundIsolateSetupComplete()) {
-      print('isolate not done yet');
-      await Future.delayed(Duration(milliseconds: 10));
-    }
-    await ForegroundService.setupIsolateCommunication(
-        (message) => print(message));
-  }
-
   @override
   void initState() {
     super.initState();
     _permission();
-    _initService();
   }
 
   @override
   Widget build(BuildContext context) {
+    var bt = Provider.of<BTProvider>(context);
     return Scaffold(
       appBar: AppBar(
         title: Text("Home page"),
@@ -77,7 +65,7 @@ class _HomePageState extends State<HomePage> {
                     layers: [
                       TileLayerOptions(
                         urlTemplate:
-                            "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
                         subdomains: ['a', 'b', 'c'],
                       ),
                       MarkerLayerOptions(markers: markers)
@@ -86,46 +74,31 @@ class _HomePageState extends State<HomePage> {
                   if (markers.length > 0)
                     Container(
                       alignment: Alignment.bottomCenter,
-                      padding: EdgeInsets.all(20),
+                      padding:
+                          EdgeInsets.symmetric(vertical: 80, horizontal: 10),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
                           RaisedButton(
                             child: Text('init'),
-                            onPressed: () => _initService(),
+                            onPressed: () => bt.init(),
                           ),
                           RaisedButton(
                             child: Text('go'),
                             onPressed: () async {
-                              // TODO: Send info where to go
-                              ForegroundService.sendToPort({
-                                'method': 'navigateToLatLngCompass',
-                                'args': {
-                                  'lat': markers[0].point.latitude,
-                                  'lng': markers[0].point.longitude
-                                }
-                              });
+                              // TODO
                             },
                           ),
                           RaisedButton(
                             child: Text('connect'),
                             onPressed: () async {
-                              if (!await ForegroundService
-                                  .isBackgroundIsolateSetupComplete() ||
-                                  !ForegroundService
-                                      .isIsolateCommunicationSetup) {
-                                print('stuff is not set up!!');
-                              } else {
-                                ForegroundService.sendToPort(
-                                    {'method': 'connectToHatAuto', 'args': {}});
-                              }
+                              bt.connect();
                             },
                           ),
                           RaisedButton(
                             child: Text('stop'),
                             onPressed: () {
-                              ForegroundService.sendToPort(
-                                  {'method': 'stopService', 'args': {}});
+                              bt.stop();
                             },
                             onLongPress: () {
                               ForegroundService.stopForegroundService();

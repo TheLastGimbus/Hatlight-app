@@ -11,17 +11,22 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Hatlight',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<BTProvider>(create: (_) => BTProvider()),
+      ],
+      child: MaterialApp(
+        title: 'Hatlight',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+        ),
+        darkTheme:
+            ThemeData(primarySwatch: Colors.blue, brightness: Brightness.dark),
+        themeMode: ThemeMode.dark,
+        // I need to replace it with something that will work in
+        // foreground service
+        home: HomePage(),
       ),
-      darkTheme:
-          ThemeData(primarySwatch: Colors.blue, brightness: Brightness.dark),
-      themeMode: ThemeMode.dark,
-      // I need to replace it with something that will work in
-      // foreground service
-      home: HomePage(),
     );
   }
 }
