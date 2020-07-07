@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:foreground_service/foreground_service.dart';
+import 'package:hatlight/pages/home_page/colors_fragment.dart';
+import 'package:hatlight/pages/home_page/map_fragment.dart';
+import 'package:hatlight/pages/home_page/settings_fragment.dart';
 import 'package:hatlight/providers/bt_provider.dart';
-import 'package:latlong/latlong.dart';
 import 'package:location/location.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
@@ -15,10 +16,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<Marker> markers = [];
   int _picked = 0;
-  var mapController = MapController();
   var loc = Location();
+  var currentIndex = 0;
 
   void _permission() async {
     var status = await Permission.locationAlways.status;
@@ -47,40 +47,22 @@ class _HomePageState extends State<HomePage> {
             Flexible(
               child: Stack(
                 children: <Widget>[
-                  FlutterMap(
-                    mapController: mapController,
-                    options: MapOptions(
-                        center: LatLng(41.904088, 12.453005),
-                        maxZoom: 18.49,
-                        onTap: (tapPlace) {
-                          markers = [
-                            Marker(
-                              point: tapPlace,
-                              builder: (ctx) => Icon(Icons.location_on,
-                                  size: 40, color: Colors.black),
-                            )
-                          ];
-                          setState(() {});
-                        }),
-                    layers: [
-                      TileLayerOptions(
-                        urlTemplate:
-                        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                        subdomains: ['a', 'b', 'c'],
-                      ),
-                      MarkerLayerOptions(markers: markers)
+                  IndexedStack(
+                    index: currentIndex,
+                    children: <Widget>[
+                      MapFragment(),
+                      ColorsFragment(),
+                      SettingsFragment(),
                     ],
                   ),
-                  if (markers.length > 0)
-                    Container(
-                      alignment: Alignment.bottomCenter,
-                      padding:
-                          EdgeInsets.symmetric(vertical: 80, horizontal: 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          RaisedButton(
-                            child: Text('init'),
+                  Container(
+                    alignment: Alignment.bottomCenter,
+                    padding: EdgeInsets.symmetric(vertical: 80, horizontal: 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        RaisedButton(
+                          child: Text('init'),
                             onPressed: () => bt.init(),
                           ),
                           RaisedButton(
@@ -106,19 +88,27 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ],
                       ),
-                    )
+                  ),
                 ],
               ),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.gps_fixed),
-        onPressed: () async {
-          var data = await loc.getLocation();
-          mapController.move(LatLng(data.latitude, data.longitude), 15);
-        },
+      bottomNavigationBar: BottomNavigationBar(
+        items: [
+          BottomNavigationBarItem(icon: Icon(Icons.map), title: Text('Map')),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.color_lens),
+            title: Text('Colors'),
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            title: Text('Settings'),
+          ),
+        ],
+        currentIndex: currentIndex,
+        onTap: (index) => setState(() => currentIndex = index),
       ),
     );
   }
