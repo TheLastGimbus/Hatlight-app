@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:foreground_service/foreground_service.dart';
 import 'package:hatlight/pages/home_page/colors_fragment.dart';
+import 'package:hatlight/pages/home_page/connection_app_bar.dart';
 import 'package:hatlight/pages/home_page/map_fragment.dart';
 import 'package:hatlight/pages/home_page/settings_fragment.dart';
 import 'package:hatlight/providers/bt_provider.dart';
@@ -37,9 +38,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     var bt = Provider.of<BTProvider>(context);
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Home page"),
-      ),
+      appBar: connectionAppBar(context),
       body: Container(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
