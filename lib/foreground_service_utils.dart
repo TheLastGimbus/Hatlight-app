@@ -2,6 +2,11 @@ import 'package:flutter_ble_lib/flutter_ble_lib.dart';
 import 'package:foreground_service/foreground_service.dart';
 import 'package:latlong/latlong.dart';
 
+class MODE {
+  static const BLANK = 1;
+  static const SET_COLOR_FILL = 2;
+}
+
 /// This class is only to use inside serviceFunction!!!
 /// Don't use it anywhere else!
 /// It basically manages everything because foreground_service plugin is
@@ -9,6 +14,7 @@ import 'package:latlong/latlong.dart';
 class _ForegroundServiceHandler {
   static const SERVICE_UUID = 'f344b002-83b5-4f2d-8b47-43b633299c8f';
   static const CHAR_UUID_SET_LED = '47dcc51e-f45d-4e33-964d-ec998b1f2700';
+
   final Future<void> Function(Map message) sendMessage;
   final Future<void> Function() onStop;
   var n = ForegroundService.notification;
@@ -19,6 +25,9 @@ class _ForegroundServiceHandler {
   }
 
   final bleManager = BleManager();
+  Peripheral per;
+
+  Future<bool> get isConnected => per?.isConnected() ?? false;
 
   void handleMessage(Map message) {
     switch (message['method']) {
@@ -50,30 +59,27 @@ class _ForegroundServiceHandler {
   }
 
   Future<bool> connectToHatAuto() async {
-    Peripheral per;
-    bleManager.startPeripheralScan(
-        scanMode: ScanMode.balanced, uuids: [SERVICE_UUID]).listen((event) {
-      print('New per found');
-      print(event.advertisementData.localName);
-      per = event.peripheral;
-    });
-    // Can't receive new devices when blocked with "await" :/
-//    var start = DateTime.now();
-//    await Future.doWhile(() =>
-//    (per == null &&
-//        DateTime.now().isBefore(start.add(Duration(seconds: 30)))));
-//    if (per == null) {
-//      print('Not found!');
-//      bleManager.stopPeripheralScan();
-//      return false;
-//    } else {
-//      print('Connecting to it...');
-//      await per.connect();
-//      return per.isConnected();
-//    }
+    Future<ScanResult> firstScanFuture;
+    firstScanFuture = bleManager
+        .startPeripheralScan(
+        scanMode: ScanMode.balanced, uuids: [SERVICE_UUID])
+        .first;
+    ScanResult firstScan = await Future.any(
+      [firstScanFuture, Future.delayed(Duration(seconds: 15), () => null)],
+    );
+    if (firstScan == null) {
+      print("No peripheral found!");
+      return false;
+    }
+    per = firstScan.peripheral;
+    await per.connect();
+    return per.isConnected();
   }
 
   void stop() async {
+    await per?.discoverAllServicesAndCharacteristics();
+    await per?.disconnectOrCancelConnection();
+    per = null;
     await bleManager.destroyClient();
     await ForegroundService.stopForegroundService();
     onStop();
