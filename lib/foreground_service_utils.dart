@@ -49,8 +49,16 @@ class _ForegroundServiceHandler {
         print('Scanning devices...');
         print('TODO'); // TODO
         break;
+      case 'isConnected':
+        handleIsConnectedRequest();
+        break;
     }
   }
+
+  void handleIsConnectedRequest() async => sendMessage({
+        'method': 'isConnected',
+        'args': {'response': await isConnected}
+      });
 
   void receiveMessage(dynamic message) {
     print('New message received in service: $message');
@@ -72,6 +80,15 @@ class _ForegroundServiceHandler {
       return false;
     }
     per = firstScan.peripheral;
+    per.observeConnectionState(
+        emitCurrentValue: true, completeOnDisconnect: true).listen((event) {
+      print("observed: ");
+      print(event);
+      sendMessage({
+        'method': 'isConnected',
+        'args': {'response': event == PeripheralConnectionState.connected}
+      });
+    });
     await per.connect();
     return per.isConnected();
   }
@@ -95,7 +112,7 @@ var isRunning = false;
 /// Let's see how this will go...
 void serviceFunction() async {
   if (isRunning) {
-    print('Service is already running, return');
+    //print('Service is already running, return');
     return;
   }
   print('Foreground service start');
