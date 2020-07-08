@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_ble_lib/flutter_ble_lib.dart';
 import 'package:foreground_service/foreground_service.dart';
 import 'package:latlong/latlong.dart';
@@ -13,7 +15,8 @@ class MODE {
 /// implemented very poorly :/
 class _ForegroundServiceHandler {
   static const SERVICE_UUID = 'f344b002-83b5-4f2d-8b47-43b633299c8f';
-  static const CHAR_UUID_SET_LED = '47dcc51e-f45d-4e33-964d-ec998b1f2700';
+  static const CHAR_UUID_MODE = '47dcc51e-f45d-4e33-964d-ec998b1f2700';
+  static const CHAR_UUID_COLOR_GENERAL = "cd6aaefa-29d8-42ae-bd8c-fd4f654e7c66";
 
   final Future<void> Function(Map message) sendMessage;
   final Future<void> Function() onStop;
@@ -38,11 +41,11 @@ class _ForegroundServiceHandler {
         print('Connecting to hat ...');
         n.setTitle('Connecting...');
         connectToHatAuto().then(
-            (value) => n.setTitle(value ? 'Connected' : 'Not connected!'));
+                (value) => n.setTitle(value ? 'Connected' : 'Not connected!'));
         break;
       case 'navigateToLatLngCompass':
         var destination =
-            LatLng(message['args']['lat'], message['args']['lng']);
+        LatLng(message['args']['lat'], message['args']['lng']);
         print('Navigating to: $destination');
         break;
       case 'scanDevices':
@@ -52,13 +55,28 @@ class _ForegroundServiceHandler {
       case 'isConnected':
         handleIsConnectedRequest();
         break;
+      case 'setColor':
+        var c = message['args']['color'];
+        setColor(c['r'], c['b'], c['b']);
+        break;
     }
   }
 
+  /// This sets the MODE of hat to COLOR_FILL and sends color
+  Future<bool> setColor(int r, int g, int b) async {
+    if (!await isConnected) return false;
+    await per.writeCharacteristic(SERVICE_UUID, CHAR_UUID_MODE,
+        Uint8List.fromList([MODE.SET_COLOR_FILL]), false);
+    // TODO: Figure out if this .fromList is doing okay
+    await per.writeCharacteristic(SERVICE_UUID, CHAR_UUID_COLOR_GENERAL,
+        Uint8List.fromList([r, g, b]), false);
+    return true;
+  }
+
   void handleIsConnectedRequest() async => sendMessage({
-        'method': 'isConnected',
-        'args': {'response': await isConnected}
-      });
+    'method': 'isConnected',
+    'args': {'response': await isConnected}
+  });
 
   void receiveMessage(dynamic message) {
     print('New message received in service: $message');
@@ -90,6 +108,7 @@ class _ForegroundServiceHandler {
       });
     });
     await per.connect();
+    await per.discoverAllServicesAndCharacteristics();
     return per.isConnected();
   }
 

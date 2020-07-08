@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:foreground_service/foreground_service.dart';
 import 'package:hatlight/foreground_service_utils.dart';
 
@@ -59,6 +60,18 @@ class BTProvider with ChangeNotifier {
 
   void refreshIsConnected() =>
       sendMessage({'method': 'isConnected', 'args': {}});
+
+  // Send color in separate RGB ints instead of 32bit for compatibility stuff
+  void setColor(Color color) => sendMessage({
+        'method': 'setColor',
+        'args': {
+          'color': {
+            'r': color.red,
+            'g': color.green,
+            'b': color.blue,
+          },
+        }
+      });
 
   void stop() async {
     sendMessage({'method': 'stopService', 'args': {}});
