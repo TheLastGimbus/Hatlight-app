@@ -68,7 +68,7 @@ class _ForegroundServiceHandler {
         break;
       case 'setColor':
         var c = message['args']['color'];
-        setColor(c['r'], c['b'], c['b']);
+        setColor(c['r'], c['g'], c['b']);
         break;
     }
   }
@@ -174,6 +174,7 @@ class _ForegroundServiceHandler {
   }
 
   void stop() async {
+    await _locationStreamSub.cancel();
     await per?.disconnectOrCancelConnection();
     per = null;
     await bleManager.destroyClient();
