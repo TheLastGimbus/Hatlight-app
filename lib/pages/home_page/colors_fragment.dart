@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter_circle_color_picker/flutter_circle_color_picker.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:hatlight/providers/bt_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -21,15 +21,19 @@ class _ColorsFragmentState extends State<ColorsFragment> {
       alignment: Alignment.center,
       child: Column(
         children: <Widget>[
-          CircleColorPicker(
-            onChanged: (color) async {
+          ColorPicker(
+            pickerColor: _color,
+            onColorChanged: (color) async {
               _color = color;
+              setState(() {});
               if (_sending) return;
               _sending = true;
               bt.setColor(_color);
               await Future.delayed(Duration(milliseconds: 30));
               _sending = false;
             },
+            enableAlpha: false,
+            pickerAreaHeightPercent: 0.8,
           ),
           RaisedButton(
             child: Text('Send'),

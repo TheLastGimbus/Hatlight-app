@@ -24,7 +24,7 @@ dependencies:
   # UI things:
   flutter_map: ^0.9.0
   numberpicker: ^1.2.0
-  flutter_circle_color_picker: ^0.2.0
+  flutter_colorpicker: ^0.3.4
 
   # Logic things:
   provider: ^4.1.3
