@@ -1,12 +1,16 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter_ble_lib/flutter_ble_lib.dart';
 import 'package:foreground_service/foreground_service.dart';
+import 'package:geodesy/geodesy.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:latlong/latlong.dart';
 
 class MODE {
   static const BLANK = 1;
   static const SET_COLOR_FILL = 2;
+  static const NAVIGATION_COMPASS_TARGET = 3;
 }
 
 /// This class is only to use inside serviceFunction!!!
@@ -17,10 +21,16 @@ class _ForegroundServiceHandler {
   static const SERVICE_UUID = 'f344b002-83b5-4f2d-8b47-43b633299c8f';
   static const CHAR_UUID_MODE = '47dcc51e-f45d-4e33-964d-ec998b1f2700';
   static const CHAR_UUID_COLOR_GENERAL = "cd6aaefa-29d8-42ae-bd8c-fd4f654e7c66";
+  static const CHAR_UUID_NAV_COMPASS_TARGET_BEARING =
+      "c749ff77-6401-48cd-b739-cfad6eba6f01";
 
   final Future<void> Function(Map message) sendMessage;
   final Future<void> Function() onStop;
   var n = ForegroundService.notification;
+
+  var location = Geolocator();
+  StreamSubscription<Position> _locationStreamSub;
+  LatLng _navigationCompassTargetLatLng;
 
   _ForegroundServiceHandler({this.sendMessage, this.onStop}) {
     n.setTitle('Waiting to connect to hat...');
@@ -47,6 +57,7 @@ class _ForegroundServiceHandler {
         var destination =
         LatLng(message['args']['lat'], message['args']['lng']);
         print('Navigating to: $destination');
+        startNavigationCompassTarget(destination);
         break;
       case 'scanDevices':
         print('Scanning devices...');
@@ -71,6 +82,56 @@ class _ForegroundServiceHandler {
     await per.writeCharacteristic(SERVICE_UUID, CHAR_UUID_COLOR_GENERAL,
         Uint8List.fromList([r, g, b]), false);
     return true;
+  }
+
+  Future<bool> sendTargetAzimuth(double azimuth) async {
+    if (!await isConnected) return false;
+    await per.writeCharacteristic(SERVICE_UUID, CHAR_UUID_MODE,
+        Uint8List.fromList([MODE.NAVIGATION_COMPASS_TARGET]), false);
+    await per.writeCharacteristic(
+        SERVICE_UUID,
+        CHAR_UUID_NAV_COMPASS_TARGET_BEARING,
+        Uint8List.fromList([azimuth.toInt()]),
+        false);
+    return true;
+  }
+
+  Future<bool> startNavigationCompassTarget(LatLng target) async {
+    _navigationCompassTargetLatLng = target;
+
+    if ((await location.checkGeolocationPermissionStatus(
+            locationPermission: GeolocationPermission.locationAlways)) !=
+        GeolocationStatus.granted) {
+      print("No location persmission!");
+      await n.setTitle("Can't start navigation!");
+      await n.setText("No location permission!");
+      return false;
+    }
+    if (!await location.isLocationServiceEnabled()) {
+      await n.setTitle("Can't start navigation!");
+      await n.setText("Location disabled!");
+      return false;
+    }
+    _locationStreamSub?.cancel();
+    _locationStreamSub = location.getPositionStream().listen((event) {
+      // Maybe remove that later because it's already in geolocation?
+      var g = Geodesy();
+      var current = LatLng(event.latitude, event.longitude);
+      var bearing = g.finalBearingBetweenTwoGeoPoints(
+          current, _navigationCompassTargetLatLng);
+      print("Bearing: $bearing");
+      sendTargetAzimuth(bearing);
+    });
+    return true;
+  }
+
+  Future<bool> stopNavigationCompassTarget() async {
+    if (_locationStreamSub != null) {
+      await _locationStreamSub.cancel();
+      return true;
+    } else {
+      return false;
+    }
   }
 
   void handleIsConnectedRequest() async => sendMessage({

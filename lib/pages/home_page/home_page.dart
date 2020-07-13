@@ -67,10 +67,14 @@ class _HomePageState extends State<HomePage> {
                           RaisedButton(
                             child: Text('go'),
                             onPressed: () async {
-                              // TODO
-                            },
-                          ),
-                          RaisedButton(
+                            if (bt.targetLatLng != null) {
+                              bt.startNavigationCompassTarget(bt.targetLatLng);
+                            } else {
+                              print("No target!");
+                            }
+                          },
+                        ),
+                        RaisedButton(
                             child: Text('connect'),
                             onPressed: () async {
                               bt.connect();

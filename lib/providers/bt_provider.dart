@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:foreground_service/foreground_service.dart';
 import 'package:hatlight/foreground_service_utils.dart';
+import 'package:latlong/latlong.dart';
 
 /*
 What I want with the bluetooth functionality:
@@ -15,6 +16,8 @@ What I want with the bluetooth functionality:
 class BTProvider with ChangeNotifier {
   StreamController<Map> incomingMessagesCtrl = StreamController<Map>();
   bool _isConnected = false;
+
+  LatLng targetLatLng;
 
   BTProvider() {
     incomingMessagesCtrl.stream.listen((event) {
@@ -71,6 +74,11 @@ class BTProvider with ChangeNotifier {
             'b': color.blue,
           },
         }
+      });
+
+  void startNavigationCompassTarget(LatLng target) => sendMessage({
+        'method': 'navigateToLatLngCompass',
+        'args': {'lat': target.latitude, 'lng': target.longitude}
       });
 
   void stop() async {
