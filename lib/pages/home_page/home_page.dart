@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:foreground_service/foreground_service.dart';
 import 'package:hatlight/pages/home_page/colors_fragment.dart';
 import 'package:hatlight/pages/home_page/connection_app_bar.dart';
 import 'package:hatlight/pages/home_page/map_fragment.dart';
@@ -53,44 +52,6 @@ class _HomePageState extends State<HomePage> {
                       ColorsFragment(),
                       SettingsFragment(),
                     ],
-                  ),
-                  Container(
-                    alignment: Alignment.bottomCenter,
-                    padding: EdgeInsets.symmetric(vertical: 80, horizontal: 10),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        RaisedButton(
-                          child: Text('init'),
-                            onPressed: () => bt.init(),
-                          ),
-                          RaisedButton(
-                            child: Text('go'),
-                            onPressed: () async {
-                            if (bt.targetLatLng != null) {
-                              bt.startNavigationCompassTarget(bt.targetLatLng);
-                            } else {
-                              print("No target!");
-                            }
-                          },
-                        ),
-                        RaisedButton(
-                            child: Text('connect'),
-                            onPressed: () async {
-                              bt.connect();
-                            },
-                          ),
-                          RaisedButton(
-                            child: Text('stop'),
-                            onPressed: () {
-                              bt.stop();
-                            },
-                            onLongPress: () {
-                              ForegroundService.stopForegroundService();
-                            },
-                          ),
-                        ],
-                      ),
                   ),
                 ],
               ),
