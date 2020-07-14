@@ -128,6 +128,9 @@ class _ForegroundServiceHandler {
   Future<bool> stopNavigationCompassTarget() async {
     if (_locationStreamSub != null) {
       await _locationStreamSub.cancel();
+      if (!await isConnected) return false;
+      await per.writeCharacteristic(SERVICE_UUID, CHAR_UUID_MODE,
+          Uint8List.fromList([MODE.BLANK]), false);
       return true;
     } else {
       return false;
@@ -174,7 +177,8 @@ class _ForegroundServiceHandler {
   }
 
   void stop() async {
-    await _locationStreamSub.cancel();
+    await _locationStreamSub?.cancel();
+    _locationStreamSub = null;
     await per?.disconnectOrCancelConnection();
     per = null;
     await bleManager.destroyClient();
