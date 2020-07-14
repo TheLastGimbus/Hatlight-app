@@ -5,6 +5,11 @@ import 'package:provider/provider.dart';
 AppBar connectionAppBar(BuildContext ctx) {
   var bt = Provider.of<BTProvider>(ctx);
   return AppBar(
-    title: Text(bt.isConnected ? "Connected" : "Not connected"),
+    backgroundColor: bt.isConnected
+        ? bt.isNavigating ? Colors.green : Theme.of(ctx).primaryColor
+        : Colors.red,
+    title: Text(bt.isConnected
+        ? bt.isNavigating ? "Navigating" : "Connected"
+        : "Not connected"),
   );
 }

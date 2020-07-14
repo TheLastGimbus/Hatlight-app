@@ -17,6 +17,7 @@ class BTProvider with ChangeNotifier {
   StreamController<Map> incomingMessagesCtrl = StreamController<Map>();
   bool _isConnected = false;
 
+  bool _isNavigating = false;
   LatLng targetLatLng;
 
   BTProvider() {
@@ -61,10 +62,18 @@ class BTProvider with ChangeNotifier {
 
   bool get isConnected => _isConnected;
 
+  bool get isNavigating => _isNavigating;
+
   void refreshIsConnected() =>
       sendMessage({'method': 'isConnected', 'args': {}});
 
-  void goBlank() => sendMessage({'method': 'setBlank', 'args': {}});
+  void goBlank() =>
+      sendMessage({'method': 'setBlank', 'args': {}}).then((value) {
+        if (value) {
+          _isNavigating = false;
+          notifyListeners();
+        }
+      });
 
   // Send color in separate RGB ints instead of 32bit for compatibility stuff
   void setColor(Color color) => sendMessage({
@@ -81,6 +90,9 @@ class BTProvider with ChangeNotifier {
   void startNavigationCompassTarget(LatLng target) => sendMessage({
         'method': 'navigateToLatLngCompass',
         'args': {'lat': target.latitude, 'lng': target.longitude}
+      }).then((value) {
+        _isNavigating = value;
+        notifyListeners();
       });
 
   void calibrateCompass() =>
