@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:hatlight/providers/bt_provider.dart';
 import 'package:latlong/latlong.dart';
 import 'package:provider/provider.dart';
@@ -12,7 +13,9 @@ class MapFragment extends StatefulWidget {
 class _MapFragmentState extends State<MapFragment> {
   Marker destinationMarker;
   Marker newDestinationMarker;
+  Marker userLocationMarker;
   var mapController = MapController();
+  var loc = Geolocator();
 
   Widget buttons(BTProvider bt) => Container(
         alignment: Alignment.bottomCenter,
@@ -64,6 +67,24 @@ class _MapFragmentState extends State<MapFragment> {
         ),
       );
 
+  void setupLocation() async {
+    if ((await loc.checkGeolocationPermissionStatus()) ==
+        GeolocationStatus.granted) {
+      loc.getPositionStream().listen((event) {
+        userLocationMarker = Marker(
+            point: LatLng(event.latitude, event.longitude),
+            builder: (ctx) =>
+                Icon(Icons.radio_button_checked, color: Colors.blue));
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    setupLocation();
+  }
+
   @override
   Widget build(BuildContext context) {
     var bt = Provider.of<BTProvider>(context);
@@ -98,10 +119,22 @@ class _MapFragmentState extends State<MapFragment> {
               ),
               MarkerLayerOptions(
                   markers: [
-                    destinationMarker,
-                    newDestinationMarker
-                  ].where((e) => e != null).toList())
+                userLocationMarker,
+                destinationMarker,
+                newDestinationMarker
+              ].where((e) => e != null).toList())
             ],
+          ),
+          Container(
+            alignment: Alignment.bottomRight,
+            padding: EdgeInsets.all(24),
+            child: FloatingActionButton(
+              child: Icon(Icons.my_location),
+              onPressed: () async {
+                var pos = await loc.getCurrentPosition();
+                mapController.move(LatLng(pos.latitude, pos.longitude), 16);
+              },
+            ),
           ),
           if(destinationMarker != null || newDestinationMarker != null)
             buttons(bt),
