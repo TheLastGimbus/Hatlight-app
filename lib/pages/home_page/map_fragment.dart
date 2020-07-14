@@ -29,6 +29,14 @@ class _MapFragmentState extends State<MapFragment> {
                 }
               },
             ),
+            RaisedButton(
+              child: Text('stop'),
+              onPressed: () {
+                bt.goBlank();
+                markers = [];
+                setState(() {});
+              },
+            )
           ],
         ),
       );

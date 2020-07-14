@@ -64,6 +64,8 @@ class BTProvider with ChangeNotifier {
   void refreshIsConnected() =>
       sendMessage({'method': 'isConnected', 'args': {}});
 
+  void goBlank() => sendMessage({'method': 'setBlank', 'args': {}});
+
   // Send color in separate RGB ints instead of 32bit for compatibility stuff
   void setColor(Color color) => sendMessage({
         'method': 'setColor',

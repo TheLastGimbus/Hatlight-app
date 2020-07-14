@@ -28,6 +28,8 @@ class _ForegroundServiceHandler {
 
   final Future<void> Function(Map message) sendMessage;
   final Future<void> Function() onStop;
+
+  // TODO: More notification editing
   var n = ForegroundService.notification;
 
   var location = Geolocator();
@@ -54,6 +56,10 @@ class _ForegroundServiceHandler {
         n.setTitle('Connecting...');
         connectToHatAuto().then(
                 (value) => n.setTitle(value ? 'Connected' : 'Not connected!'));
+        break;
+      case 'setBlank':
+        // This also sets MODE.BLANK, even if not navigating
+        stopNavigationCompassTarget();
         break;
       case 'navigateToLatLngCompass':
         var destination =
