@@ -10,7 +10,8 @@ class MapFragment extends StatefulWidget {
 }
 
 class _MapFragmentState extends State<MapFragment> {
-  List<Marker> markers = [];
+  Marker destinationMarker;
+  Marker newDestinationMarker;
   var mapController = MapController();
 
   Widget buttons(BTProvider bt) => Container(
@@ -22,8 +23,29 @@ class _MapFragmentState extends State<MapFragment> {
             RaisedButton(
               child: Text('go'),
               onPressed: () async {
-                if (bt.targetLatLng != null) {
-                  bt.startNavigationCompassTarget(bt.targetLatLng);
+                if (!bt.isConnected) {
+                  print("Not connected!");
+                  return;
+                }
+                if (newDestinationMarker != null) {
+                  bt.targetLatLng = newDestinationMarker.point;
+                  if (!await bt.startNavigationCompassTarget(bt.targetLatLng)) {
+                    // Don't do anything with markers if it wasn't success
+                    return;
+                  }
+
+                  // Swap with new marker, remove temporary marker
+                  destinationMarker = Marker(
+                    point: newDestinationMarker.point,
+                    builder: (ctx) => Icon(
+                      Icons.flag,
+                      size: 60,
+                      color: Colors.black,
+                    ),
+                    anchorPos: AnchorPos.exactly(Anchor(15, -25)),
+                  );
+                  newDestinationMarker = null;
+                  setState(() {});
                 } else {
                   print("No target!");
                 }
@@ -33,7 +55,8 @@ class _MapFragmentState extends State<MapFragment> {
               child: Text('stop'),
               onPressed: () {
                 bt.goBlank();
-                markers = [];
+                destinationMarker = null;
+                newDestinationMarker = null;
                 setState(() {});
               },
             )
@@ -52,16 +75,19 @@ class _MapFragmentState extends State<MapFragment> {
             options: MapOptions(
                 center: LatLng(41.904088, 12.453005),
                 maxZoom: 18.49,
-                onTap: (tapPlace) {
+                onTap: bt.isNavigating
+                    ? null
+                    : (tapPlace) {
                   bt.targetLatLng = tapPlace;
-                  markers = [
-                    Marker(
+                  newDestinationMarker = Marker(
                       point: tapPlace,
                       builder: (ctx) =>
-                          Icon(Icons.location_on,
-                              size: 40, color: Colors.black),
-                    )
-                  ];
+                          Icon(
+                            Icons.location_on,
+                            size: 40, color: Colors.black,
+                          ),
+                      anchorPos: AnchorPos.exactly(Anchor(10, -7))
+                  );
                   setState(() {});
                 }),
             layers: [
@@ -70,10 +96,15 @@ class _MapFragmentState extends State<MapFragment> {
                 "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
                 subdomains: ['a', 'b', 'c'],
               ),
-              MarkerLayerOptions(markers: markers)
+              MarkerLayerOptions(
+                  markers: [
+                    destinationMarker,
+                    newDestinationMarker
+                  ].where((e) => e != null).toList())
             ],
           ),
-          if(markers.length > 0) buttons(bt),
+          if(destinationMarker != null || newDestinationMarker != null)
+            buttons(bt),
         ],
       ),
     );

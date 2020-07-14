@@ -87,13 +87,15 @@ class BTProvider with ChangeNotifier {
         }
       });
 
-  void startNavigationCompassTarget(LatLng target) => sendMessage({
-        'method': 'navigateToLatLngCompass',
-        'args': {'lat': target.latitude, 'lng': target.longitude}
-      }).then((value) {
-        _isNavigating = value;
-        notifyListeners();
-      });
+  Future<bool> startNavigationCompassTarget(LatLng target) async {
+    var s = await sendMessage({
+      'method': 'navigateToLatLngCompass',
+      'args': {'lat': target.latitude, 'lng': target.longitude}
+    });
+    _isNavigating = s;
+    notifyListeners();
+    return _isNavigating;
+  }
 
   void calibrateCompass() =>
       sendMessage({'method': 'calibrateCompass', 'args': {}});
