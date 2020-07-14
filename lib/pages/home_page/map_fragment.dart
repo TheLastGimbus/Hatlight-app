@@ -16,6 +16,8 @@ class _MapFragmentState extends State<MapFragment> {
   Marker userLocationMarker;
   var mapController = MapController();
   var loc = Geolocator();
+  var isLocationLocked = false;
+  static final LOCKED_ZOOM = 16.0;
 
   Widget buttons(BTProvider bt) => Container(
         alignment: Alignment.bottomCenter,
@@ -71,10 +73,15 @@ class _MapFragmentState extends State<MapFragment> {
     if ((await loc.checkGeolocationPermissionStatus()) ==
         GeolocationStatus.granted) {
       loc.getPositionStream().listen((event) {
+        var ll = LatLng(event.latitude, event.longitude);
         userLocationMarker = Marker(
-            point: LatLng(event.latitude, event.longitude),
-            builder: (ctx) =>
-                Icon(Icons.radio_button_checked, color: Colors.blue));
+          point: ll,
+          builder: (ctx) =>
+              Icon(Icons.radio_button_checked, color: Colors.blue),
+        );
+        if (isLocationLocked) {
+          mapController.move(ll, LOCKED_ZOOM);
+        }
       });
     }
   }
@@ -96,6 +103,9 @@ class _MapFragmentState extends State<MapFragment> {
             options: MapOptions(
                 center: LatLng(41.904088, 12.453005),
                 maxZoom: 18.49,
+                // TODO: Weird things happen when i try to set
+                // interactive: isLocationLocked
+                // map goes blank when i call setState then
                 onTap: bt.isNavigating
                     ? null
                     : (tapPlace) {
@@ -129,10 +139,17 @@ class _MapFragmentState extends State<MapFragment> {
             alignment: Alignment.bottomRight,
             padding: EdgeInsets.all(24),
             child: FloatingActionButton(
-              child: Icon(Icons.my_location),
+              child: Icon(isLocationLocked
+                  ? Icons.my_location
+                  : Icons.location_searching),
               onPressed: () async {
-                var pos = await loc.getCurrentPosition();
-                mapController.move(LatLng(pos.latitude, pos.longitude), 16);
+                isLocationLocked = !isLocationLocked;
+                setState(() {});
+                if (isLocationLocked) {
+                  var pos = await loc.getCurrentPosition();
+                  mapController.move(
+                      LatLng(pos.latitude, pos.longitude), LOCKED_ZOOM);
+                }
               },
             ),
           ),
