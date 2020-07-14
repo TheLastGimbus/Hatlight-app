@@ -23,6 +23,8 @@ class _ForegroundServiceHandler {
   static const CHAR_UUID_COLOR_GENERAL = "cd6aaefa-29d8-42ae-bd8c-fd4f654e7c66";
   static const CHAR_UUID_NAV_COMPASS_TARGET_BEARING =
       "c749ff77-6401-48cd-b739-cfad6eba6f01";
+  static const CHAR_UUID_CALIBRATE_COMPASS =
+      "bc5939f5-ce5c-450f-870f-876e92d52d89";
 
   final Future<void> Function(Map message) sendMessage;
   final Future<void> Function() onStop;
@@ -70,6 +72,8 @@ class _ForegroundServiceHandler {
         var c = message['args']['color'];
         setColor(c['r'], c['g'], c['b']);
         break;
+      case 'calibrateCompass':
+        calibrateCompass();
     }
   }
 
@@ -135,6 +139,13 @@ class _ForegroundServiceHandler {
     } else {
       return false;
     }
+  }
+
+  Future<bool> calibrateCompass() async {
+    if (!await per.isConnected()) return false;
+    await per.writeCharacteristic(SERVICE_UUID, CHAR_UUID_CALIBRATE_COMPASS,
+        Uint8List.fromList([1]), false);
+    return true;
   }
 
   void handleIsConnectedRequest() async => sendMessage({

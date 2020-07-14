@@ -81,6 +81,9 @@ class BTProvider with ChangeNotifier {
         'args': {'lat': target.latitude, 'lng': target.longitude}
       });
 
+  void calibrateCompass() =>
+      sendMessage({'method': 'calibrateCompass', 'args': {}});
+
   void stop() async {
     sendMessage({'method': 'stopService', 'args': {}});
   }
