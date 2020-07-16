@@ -37,6 +37,7 @@ class _ForegroundServiceHandler {
   LatLng _navigationCompassTargetLatLng;
 
   _ForegroundServiceHandler({this.sendMessage, this.onStop}) {
+    n.setPriority(AndroidNotificationPriority.LOW);
     n.setTitle('Waiting to connect to hat...');
     bleManager.createClient();
   }
@@ -54,8 +55,10 @@ class _ForegroundServiceHandler {
       case 'connectToHatAuto':
         print('Connecting to hat ...');
         n.setTitle('Connecting...');
-        connectToHatAuto().then(
-                (value) => n.setTitle(value ? 'Connected' : 'Not connected!'));
+        connectToHatAuto().then((value) {
+          n.setTitle(value ? 'Connected' : 'Not connected!');
+          n.setText("");
+        });
         break;
       case 'setBlank':
         // This also sets MODE.BLANK, even if not navigating
@@ -85,6 +88,7 @@ class _ForegroundServiceHandler {
 
   /// This sets the MODE of hat to COLOR_FILL and sends color
   Future<bool> setColor(int r, int g, int b) async {
+    n.setText("Color: R=$r G=$g B=$b");
     if (!await isConnected) return false;
     await per.writeCharacteristic(SERVICE_UUID, CHAR_UUID_MODE,
         Uint8List.fromList([MODE.SET_COLOR_FILL]), false);
@@ -123,11 +127,20 @@ class _ForegroundServiceHandler {
       return false;
     }
 
-    handlePos(Position pos) {
+    handlePos(Position pos) async {
+      if (!await isConnected) {
+        n.setTitle("Not connected!");
+        n.setText("I was navigating :(");
+        return;
+      }
       var g = Geodesy();
       var current = LatLng(pos.latitude, pos.longitude);
       var bearing = g.finalBearingBetweenTwoGeoPoints(
           current, _navigationCompassTargetLatLng);
+      var distance = g.distanceBetweenTwoGeoPoints(
+          current, _navigationCompassTargetLatLng);
+      n.setTitle("Navigating");
+      n.setText("Distance: ${distance.toInt()}m");
       print("Bearing: $bearing");
       sendTargetAzimuth(bearing);
     }
@@ -135,7 +148,7 @@ class _ForegroundServiceHandler {
     _locationStreamSub?.cancel();
     handlePos(await location.getCurrentPosition());
     _locationStreamSub = location
-        .getPositionStream(LocationOptions(distanceFilter: 5))
+        .getPositionStream(LocationOptions(/*distanceFilter: 5*/))
         .listen((event) {
       // Maybe remove that later because it's already in geolocation?
       handlePos(event);
@@ -144,6 +157,8 @@ class _ForegroundServiceHandler {
   }
 
   Future<bool> stopNavigationCompassTarget() async {
+    n.setTitle("Connected");
+    n.setText("");
     if (_locationStreamSub != null) {
       await _locationStreamSub.cancel();
       if (!await isConnected) return false;
@@ -191,9 +206,14 @@ class _ForegroundServiceHandler {
         emitCurrentValue: true, completeOnDisconnect: true).listen((event) {
       print("observed: ");
       print(event);
+      var c = event == PeripheralConnectionState.connected;
+      if (!c) {
+        n.setTitle("Not connected!");
+        n.setText("");
+      }
       sendMessage({
         'method': 'isConnected',
-        'args': {'response': event == PeripheralConnectionState.connected}
+        'args': {'response': c}
       });
     });
     await per.connect();
