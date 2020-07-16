@@ -206,15 +206,15 @@ class _ForegroundServiceHandler {
         emitCurrentValue: true, completeOnDisconnect: true).listen((event) {
       print("observed: ");
       print(event);
-      var c = event == PeripheralConnectionState.connected;
-      if (!c) {
-        n.setTitle("Not connected!");
-        n.setText("");
-      }
+      bool c = event == PeripheralConnectionState.connected;
       sendMessage({
         'method': 'isConnected',
         'args': {'response': c}
       });
+      if (!c) {
+        n.setTitle("Not connected!");
+        n.setText("");
+      }
     });
     await per.connect();
     await per.discoverAllServicesAndCharacteristics();
