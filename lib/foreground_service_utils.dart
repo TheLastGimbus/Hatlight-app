@@ -98,15 +98,21 @@ class _ForegroundServiceHandler {
     return true;
   }
 
-  Future<bool> sendTargetAzimuth(double azimuth) async {
+  Future<bool> sendTargetAzimuth(int azimuth) async {
     if (!await isConnected) return false;
     await per.writeCharacteristic(SERVICE_UUID, CHAR_UUID_MODE,
         Uint8List.fromList([MODE.NAVIGATION_COMPASS_TARGET]), false);
+    // azimuth can range between 0-360
+    // 360 is more than 255, which is max for 8 bit byte
+    // so we need to divide it to two separete bytes
+    // of fucking course this is from stackoverflow
+    var data = ByteData(2)..setUint16(0, azimuth);
     await per.writeCharacteristic(
-        SERVICE_UUID,
-        CHAR_UUID_NAV_COMPASS_TARGET_BEARING,
-        Uint8List.fromList([azimuth.toInt()]),
-        false);
+      SERVICE_UUID,
+      CHAR_UUID_NAV_COMPASS_TARGET_BEARING,
+      Uint8List.fromList([data.getUint8(0), data.getUint8(1)]),
+      false,
+    );
     return true;
   }
 
@@ -142,7 +148,7 @@ class _ForegroundServiceHandler {
       n.setTitle("Navigating");
       n.setText("Distance: ${distance.toInt()}m");
       print("Bearing: $bearing");
-      sendTargetAzimuth(bearing);
+      sendTargetAzimuth(bearing.toInt());
     }
 
     _locationStreamSub?.cancel();
