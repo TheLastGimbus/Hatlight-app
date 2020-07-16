@@ -122,15 +122,23 @@ class _ForegroundServiceHandler {
       await n.setText("Location disabled!");
       return false;
     }
-    _locationStreamSub?.cancel();
-    _locationStreamSub = location.getPositionStream().listen((event) {
-      // Maybe remove that later because it's already in geolocation?
+
+    handlePos(Position pos) {
       var g = Geodesy();
-      var current = LatLng(event.latitude, event.longitude);
+      var current = LatLng(pos.latitude, pos.longitude);
       var bearing = g.finalBearingBetweenTwoGeoPoints(
           current, _navigationCompassTargetLatLng);
       print("Bearing: $bearing");
       sendTargetAzimuth(bearing);
+    }
+
+    _locationStreamSub?.cancel();
+    handlePos(await location.getCurrentPosition());
+    _locationStreamSub = location
+        .getPositionStream(LocationOptions(distanceFilter: 5))
+        .listen((event) {
+      // Maybe remove that later because it's already in geolocation?
+      handlePos(event);
     });
     return true;
   }
