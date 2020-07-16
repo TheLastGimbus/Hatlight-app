@@ -204,9 +204,19 @@ class _ForegroundServiceHandler {
   void stop() async {
     await _locationStreamSub?.cancel();
     _locationStreamSub = null;
-    await per?.disconnectOrCancelConnection();
+    try {
+      await per?.disconnectOrCancelConnection();
+    } catch (e) {
+      print("Error when disconnecting from BT!");
+      print(e);
+    }
     per = null;
-    await bleManager.destroyClient();
+    try {
+      await bleManager.destroyClient();
+    } catch (e) {
+      print("Error when destroing BT client!");
+      print(e);
+    }
     await ForegroundService.stopForegroundService();
     onStop();
   }
