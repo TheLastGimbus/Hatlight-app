@@ -240,6 +240,12 @@ class _ForegroundServiceHandler {
     await _locationStreamSub?.cancel();
     _locationStreamSub = null;
     try {
+      await stopNavigationCompassTarget();
+    } catch (e) {
+      print("Error stopping navigation and setting blank mode!");
+      print(e);
+    }
+    try {
       await per?.disconnectOrCancelConnection();
     } catch (e) {
       print("Error when disconnecting from BT!");
