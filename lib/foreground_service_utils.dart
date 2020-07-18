@@ -237,14 +237,15 @@ class _ForegroundServiceHandler {
   }
 
   void stop() async {
-    await _locationStreamSub?.cancel();
-    _locationStreamSub = null;
     try {
       await stopNavigationCompassTarget();
     } catch (e) {
       print("Error stopping navigation and setting blank mode!");
       print(e);
     }
+    // Just in case ;)
+    await _locationStreamSub?.cancel();
+    _locationStreamSub = null;
     try {
       await per?.disconnectOrCancelConnection();
     } catch (e) {
