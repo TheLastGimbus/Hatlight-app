@@ -33,7 +33,7 @@ dependencies:
 
   # Plugins:
   permission_handler: ^5.0.1+1
-  flutter_ble_lib: ^2.2.5
+  flutter_ble_lib: ^2.2.8
   location: ^3.0.2
   geolocator: ^5.3.2+2
   foreground_service: ^2.0.1+1
