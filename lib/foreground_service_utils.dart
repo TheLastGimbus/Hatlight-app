@@ -6,6 +6,7 @@ import 'package:foreground_service/foreground_service.dart';
 import 'package:geodesy/geodesy.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong/latlong.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MODE {
   static const BLANK = 1;
@@ -87,12 +88,13 @@ class _ForegroundServiceHandler {
   }
 
   /// This sets the MODE of hat to COLOR_FILL and sends color
-  Future<bool> setColor(int r, int g, int b) async {
+  Future<bool> setColor(int r, int g, int b, {bool setMode = true}) async {
     n.setText("Color: R=$r G=$g B=$b");
     if (!await isConnected) return false;
-    await per.writeCharacteristic(SERVICE_UUID, CHAR_UUID_MODE,
-        Uint8List.fromList([MODE.SET_COLOR_FILL]), false);
-    // TODO: Figure out if this .fromList is doing okay
+    if (setMode) {
+      await per.writeCharacteristic(SERVICE_UUID, CHAR_UUID_MODE,
+          Uint8List.fromList([MODE.SET_COLOR_FILL]), false);
+    }
     await per.writeCharacteristic(SERVICE_UUID, CHAR_UUID_COLOR_GENERAL,
         Uint8List.fromList([r, g, b]), false);
     return true;
@@ -152,6 +154,13 @@ class _ForegroundServiceHandler {
     }
 
     _locationStreamSub?.cancel();
+    var sp = await SharedPreferences.getInstance();
+    setColor(
+      sp.getInt('hat.color.general.r') ?? 255,
+      sp.getInt('hat.color.general.g') ?? 255,
+      sp.getInt('hat.color.general.b') ?? 255,
+      setMode: false,
+    );
     handlePos(await location.getCurrentPosition());
     _locationStreamSub = location
         .getPositionStream(LocationOptions(/*distanceFilter: 5*/))
